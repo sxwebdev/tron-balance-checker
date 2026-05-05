@@ -28,5 +28,20 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+
+# AI
+.claude/
+.agents/
+
+# Runtime data
+data/
+
+# Default export artifact
+output.csv
+
+# Built binary
+/tron-balance-checker
+
+.DS_Store

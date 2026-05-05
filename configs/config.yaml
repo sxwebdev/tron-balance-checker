@@ -1,0 +1,19 @@
+nodes:
+  - grpc_addr: tron-grpc.publicnode.com:443
+    headers: ""
+    use_tls: true
+
+usdt:
+  contract: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+  decimals: 6
+
+checker:
+  rate_limit: 3
+  batch_size: 50
+  retry_max: 3
+  retry_delay: 1s
+  request_timeout: 15s
+  loop_period: 100ms
+
+database:
+  path: data/sqlite/db.sqlite
