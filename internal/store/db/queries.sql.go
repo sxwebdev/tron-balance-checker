@@ -73,7 +73,7 @@ func (q *Queries) InsertAddress(ctx context.Context, address string) (int64, err
 }
 
 const listAll = `-- name: ListAll :many
-SELECT address, trx_balance, usdt_balance, status, checked_at
+SELECT address, trx_balance, usdt_balance, is_activated, status, checked_at
 FROM addresses
 ORDER BY CAST(trx_balance AS REAL) DESC, address ASC
 `
@@ -82,6 +82,7 @@ type ListAllRow struct {
 	Address     string
 	TrxBalance  string
 	UsdtBalance string
+	IsActivated bool
 	Status      string
 	CheckedAt   sql.NullTime
 }
@@ -99,6 +100,7 @@ func (q *Queries) ListAll(ctx context.Context) ([]ListAllRow, error) {
 			&i.Address,
 			&i.TrxBalance,
 			&i.UsdtBalance,
+			&i.IsActivated,
 			&i.Status,
 			&i.CheckedAt,
 		); err != nil {
@@ -119,6 +121,7 @@ const markChecked = `-- name: MarkChecked :exec
 UPDATE addresses
 SET trx_balance = ?,
     usdt_balance = ?,
+    is_activated = ?,
     status = 'ok',
     attempts = attempts + 1,
     checked_at = CURRENT_TIMESTAMP,
@@ -129,11 +132,17 @@ WHERE address = ?
 type MarkCheckedParams struct {
 	TrxBalance  string
 	UsdtBalance string
+	IsActivated bool
 	Address     string
 }
 
 func (q *Queries) MarkChecked(ctx context.Context, arg MarkCheckedParams) error {
-	_, err := q.db.ExecContext(ctx, markChecked, arg.TrxBalance, arg.UsdtBalance, arg.Address)
+	_, err := q.db.ExecContext(ctx, markChecked,
+		arg.TrxBalance,
+		arg.UsdtBalance,
+		arg.IsActivated,
+		arg.Address,
+	)
 	return err
 }
 
@@ -161,6 +170,7 @@ UPDATE addresses
 SET status = 'pending',
     attempts = 0,
     error = '',
+    is_activated = 0,
     checked_at = NULL
 `
 

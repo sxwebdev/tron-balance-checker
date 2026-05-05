@@ -8,9 +8,9 @@ usdt:
   decimals: 6
 
 checker:
-  rate_limit: 3
+  rate_limit: 4
   batch_size: 50
-  retry_max: 3
+  retry_max: 10
   retry_delay: 1s
   request_timeout: 15s
   loop_period: 100ms

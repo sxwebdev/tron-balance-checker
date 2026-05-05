@@ -15,6 +15,7 @@ SELECT address FROM addresses WHERE status = 'pending' LIMIT ?;
 UPDATE addresses
 SET trx_balance = ?,
     usdt_balance = ?,
+    is_activated = ?,
     status = 'ok',
     attempts = attempts + 1,
     checked_at = CURRENT_TIMESTAMP,
@@ -34,9 +35,10 @@ UPDATE addresses
 SET status = 'pending',
     attempts = 0,
     error = '',
+    is_activated = 0,
     checked_at = NULL;
 
 -- name: ListAll :many
-SELECT address, trx_balance, usdt_balance, status, checked_at
+SELECT address, trx_balance, usdt_balance, is_activated, status, checked_at
 FROM addresses
 ORDER BY CAST(trx_balance AS REAL) DESC, address ASC;

@@ -13,6 +13,7 @@ type Address struct {
 	Address     string
 	TrxBalance  string
 	UsdtBalance string
+	IsActivated bool
 	Status      string
 	Error       string
 	Attempts    int64

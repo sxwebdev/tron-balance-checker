@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS addresses (
   address       TEXT PRIMARY KEY,
   trx_balance   TEXT NOT NULL DEFAULT '0',
   usdt_balance  TEXT NOT NULL DEFAULT '0',
+  is_activated  BOOLEAN NOT NULL DEFAULT 0,
   status        TEXT NOT NULL DEFAULT 'pending',
   error         TEXT NOT NULL DEFAULT '',
   attempts      INTEGER NOT NULL DEFAULT 0,

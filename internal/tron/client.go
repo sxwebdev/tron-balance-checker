@@ -67,6 +67,16 @@ func (c *Client) GetTRX(ctx context.Context, addr string) (decimal.Decimal, erro
 	return bal, nil
 }
 
+// IsActivated reports whether the account exists on chain. Use it only when
+// GetTRX returned zero — a positive TRX balance already implies activation.
+func (c *Client) IsActivated(ctx context.Context, addr string) (bool, error) {
+	ok, err := c.c.IsAccountActivated(ctx, addr)
+	if err != nil {
+		return false, fmt.Errorf("check activation: %w", err)
+	}
+	return ok, nil
+}
+
 // GetUSDT returns the USDT (TRC20) balance of an address scaled by the
 // configured decimals.
 func (c *Client) GetUSDT(ctx context.Context, addr string) (decimal.Decimal, error) {

@@ -116,14 +116,17 @@ progress is preserved, and the next run continues from the same point.
 Output format:
 
 ```csv
-address,trx,usdt,checked_at,status
-TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t,123.456789,4567.890123,2026-05-05T11:30:14Z,ok
-TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7,12.5,0,2026-05-05T11:30:15Z,ok
+address,trx,usdt,is_activated,checked_at,status
+TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t,123.456789,4567.890123,true,2026-05-05T11:30:14Z,ok
+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7,12.5,0,true,2026-05-05T11:30:15Z,ok
+TQbLihXKWiphbAFu6hNx4NuctB28cHb42K,0,0,false,2026-05-05T11:30:16Z,ok
 ...
 ```
 
 Sorted by `trx` desc. The `status` column is one of `ok`, `failed`, or
-`pending`.
+`pending`. The `is_activated` column reflects whether the account exists on
+chain. To save RPC calls the activation lookup is only issued when the TRX
+balance is zero — any positive TRX balance implies activation.
 
 ## Storage
 
@@ -135,6 +138,7 @@ The SQLite file is created automatically at the path from the config (default
 | `address`      | TEXT PK   | Tron address                                |
 | `trx_balance`  | TEXT      | TRX balance as a decimal string             |
 | `usdt_balance` | TEXT      | USDT balance as a decimal string            |
+| `is_activated` | BOOLEAN   | Whether the account exists on chain         |
 | `status`       | TEXT      | `pending` \| `ok` \| `failed`               |
 | `error`        | TEXT      | Last error message (for `failed`)           |
 | `attempts`     | INTEGER   | Attempt counter                             |

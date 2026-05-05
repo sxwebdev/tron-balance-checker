@@ -37,6 +37,7 @@ go.work.sum
 
 # Runtime data
 data/
+input.csv
 
 # Default export artifact
 output.csv

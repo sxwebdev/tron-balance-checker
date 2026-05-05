@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 	"github.com/sxwebdev/xutils/loopper"
@@ -42,6 +43,7 @@ func (c *Checker) Run(ctx context.Context) error {
 		return nil
 	}
 
+	startedAt := time.Now()
 	c.log.Info("starting balance check",
 		slog.Int64("pending", total),
 		slog.Int("rate_limit_rps", c.cfg.Checker.RateLimit),
@@ -138,6 +140,7 @@ func (c *Checker) Run(ctx context.Context) error {
 		slog.Int64("ok", ok.Load()),
 		slog.Int64("failed", failed.Load()),
 		slog.Int64("total", total),
+		slog.Duration("elapsed", time.Since(startedAt).Round(time.Millisecond)),
 	)
 
 	if pending, err := c.store.CountPending(ctx); err == nil && pending > 0 && ctx.Err() == nil {
@@ -154,11 +157,22 @@ func (c *Checker) checkOne(ctx context.Context, addr string) error {
 	if err != nil {
 		return fmt.Errorf("trx: %w", err)
 	}
+
+	// A positive TRX balance implies the account has been activated on chain.
+	// Only fall back to a dedicated activation lookup when the balance is zero.
+	activated := trxBal.IsPositive()
+	if !activated {
+		activated, err = c.tron.IsActivated(rctx, addr)
+		if err != nil {
+			return fmt.Errorf("activated: %w", err)
+		}
+	}
+
 	usdtBal, err := c.tron.GetUSDT(rctx, addr)
 	if err != nil {
 		return fmt.Errorf("usdt: %w", err)
 	}
-	if err := c.store.MarkChecked(ctx, addr, trxBal.String(), usdtBal.String()); err != nil {
+	if err := c.store.MarkChecked(ctx, addr, trxBal.String(), usdtBal.String(), activated); err != nil {
 		return fmt.Errorf("mark checked: %w", err)
 	}
 	return nil

@@ -42,7 +42,39 @@ func New(ctx context.Context, path string) (*Store, error) {
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
 
+	if err := migrate(ctx, sqldb); err != nil {
+		_ = sqldb.Close()
+		return nil, err
+	}
+
 	return &Store{db: sqldb, q: db.New(sqldb)}, nil
+}
+
+// migrate brings older databases up to the current schema. SQLite has no
+// "ALTER TABLE ... ADD COLUMN IF NOT EXISTS", so we inspect pragma_table_info
+// and only add columns that are missing.
+func migrate(ctx context.Context, sqldb *sql.DB) error {
+	for _, m := range []struct {
+		column string
+		ddl    string
+	}{
+		{"is_activated", "ALTER TABLE addresses ADD COLUMN is_activated BOOLEAN NOT NULL DEFAULT 0"},
+	} {
+		var n int
+		if err := sqldb.QueryRowContext(ctx,
+			"SELECT COUNT(*) FROM pragma_table_info('addresses') WHERE name = ?",
+			m.column,
+		).Scan(&n); err != nil {
+			return fmt.Errorf("inspect column %q: %w", m.column, err)
+		}
+		if n > 0 {
+			continue
+		}
+		if _, err := sqldb.ExecContext(ctx, m.ddl); err != nil {
+			return fmt.Errorf("add column %q: %w", m.column, err)
+		}
+	}
+	return nil
 }
 
 func (s *Store) Close() error { return s.db.Close() }
@@ -87,11 +119,12 @@ func (s *Store) FetchPendingBatch(ctx context.Context, limit int) ([]string, err
 	return s.q.FetchPendingBatch(ctx, int64(limit))
 }
 
-func (s *Store) MarkChecked(ctx context.Context, addr, trx, usdt string) error {
+func (s *Store) MarkChecked(ctx context.Context, addr, trx, usdt string, activated bool) error {
 	return s.q.MarkChecked(ctx, db.MarkCheckedParams{
 		Address:     addr,
 		TrxBalance:  trx,
 		UsdtBalance: usdt,
+		IsActivated: activated,
 	})
 }
 

@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/sxwebdev/tron-balance-checker/internal/store"
 )
 
 // WriteRows writes the given rows to a CSV file with the header
-// "address,trx,usdt,checked_at,status". The file is created or overwritten.
+// "address,trx,usdt,is_activated,checked_at,status". The file is created or
+// overwritten.
 func WriteRows(path string, rows []store.Row) error {
 	if dir := filepath.Dir(path); dir != "" && dir != "." {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -27,7 +29,7 @@ func WriteRows(path string, rows []store.Row) error {
 
 	w := csv.NewWriter(f)
 
-	if err := w.Write([]string{"address", "trx", "usdt", "checked_at", "status"}); err != nil {
+	if err := w.Write([]string{"address", "trx", "usdt", "is_activated", "checked_at", "status"}); err != nil {
 		return fmt.Errorf("write header: %w", err)
 	}
 
@@ -40,6 +42,7 @@ func WriteRows(path string, rows []store.Row) error {
 			r.Address,
 			r.TrxBalance,
 			r.UsdtBalance,
+			strconv.FormatBool(r.IsActivated),
 			checkedAt,
 			r.Status,
 		}); err != nil {
